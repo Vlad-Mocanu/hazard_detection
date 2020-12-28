@@ -1,0 +1,27 @@
+{
+   "mail":{
+      "smtp_host":"smtp.gmail.com",
+      "smtp_port":465,
+      "smtp_user":"my_test@gmail.com",
+      "smtp_password":"my_password"
+   },
+   "water_detection":{
+       "enable_function":0,
+       "channel":17,
+       "bouncetime":1000
+   },
+   "sound_detection":{
+       "enable_function":1,
+       "chunk":4096,
+       "rate":16000,
+       "calibration_offset":123000000,
+       "chunk_treshold":5000000,
+       "minute_treshold":0.9,
+       "listen_duration_per_minute":10,
+       "consecutive_listen_minutes":1
+   },
+   "logging":{
+       "level":"DEBUG",
+       "log_file":"hazard_detection.log"
+    }
+}
