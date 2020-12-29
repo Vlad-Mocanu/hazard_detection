@@ -13,6 +13,13 @@ The brain consists of a Raspberry Pi Zero W, with internet connection.
 The presence of water is detected by using a cheap ground humity sensor. 3 pins are used: Vcc, GND and DO (digital out: 1 or 0 when water level reaches a configured level - the adjustment is done by using the sensor's potentiometer)
 <img src="ground_humidity_sensor.webp">
 The motor malfunction is detected with the help of a microphone which can identify when the motor is running. The microphone used is digital, from Adafruit: I2S MEMS Microphone Breakout. The complete wiring and testing of the module: https://learn.adafruit.com/adafruit-i2s-mems-microphone-breakout/raspberry-pi-wiring-test
+The Adafruit driver guide can be summarized to:
+```
+cd ~
+sudo pip3 install --upgrade adafruit-python-shell
+wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/i2smic.py
+sudo python3 i2smic.py
+```
 
 ## Requirements
 
@@ -32,11 +39,20 @@ To install the package and its dependencies, you can run:
 pip3 install hazard_detection/
 ```
 
-Note: The sound detection relies on pyAudio, which uses port_audio. A problem was with port_audio was encountered:
+Note1: The sound detection relies on pyAudio, which uses port_audio. A problem was with port_audio on a Raspberry Pi 4 was encountered:
 ```
 _portaudio.so: undefined symbol: Pa_GetStreamReadAvailable
 ```
 To get around this https://stackoverflow.com/questions/36681836/pyaudio-could-not-import-portaudio/
+
+Note2: On Raspberry Pi Zero W a run issue was encountered:
+```
+libf77blas.so.3: cannot open shared object file: No such file or directory
+```
+The fix consists in installing a missing library
+```
+sudo apt-get install libatlas-base-dev
+```
 
 ## Usage
 
@@ -48,3 +64,9 @@ python3 hazard_detection.py
 The default configuration file is hazard_detection/hazard_detection/hazard_config.json. This file can be edited to adjust the program to your needs. In order to use another configuration file, other than the default one you can run it like this:
 ```
 python3 hazard_detection.py --config_file <path_to_config_file>
+```
+
+To start application at boot, edit the /etc/rc.local file and add the following line:
+```
+(sleep 10; python3 <path_to_hazard_detection>/hazard_detection.py)&
+```

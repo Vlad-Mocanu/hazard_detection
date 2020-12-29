@@ -10,13 +10,13 @@ def sendEmail(smtp_message, logging, config_options):
     now = "[%s] " % datetime.datetime.now()
     email_header = """From: Alarma Inundatie <%s>
 To: %s
-Subject: """ % (config_options["mail"]["smtp_user"], ", ".join(smtp_receivers))
+Subject: """ % (config_options["mail"]["smtp_user"], ", ".join(config_options["mail"]["smtp_receivers"]))
 
     try:
         server = smtplib.SMTP_SSL(config_options["mail"]["smtp_host"], config_options["mail"]["smtp_port"])
         server.ehlo()
         server.login(config_options["mail"]["smtp_user"], config_options["mail"]["smtp_password"])
-        server.sendmail(config_options["mail"]["smtp_user"], smtp_receivers, email_header + smtp_message)
+        server.sendmail(config_options["mail"]["smtp_user"], config_options["mail"]["smtp_receivers"], email_header + smtp_message)
         server.close()
 
         logging.info(now + "Email sent!")

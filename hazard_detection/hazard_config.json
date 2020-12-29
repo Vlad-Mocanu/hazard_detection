@@ -3,7 +3,8 @@
       "smtp_host":"smtp.gmail.com",
       "smtp_port":465,
       "smtp_user":"my_test@gmail.com",
-      "smtp_password":"my_password"
+      "smtp_password":"my_password",
+      "smtp_receivers":["my_mail@gmail.com", "my_mail2@gmail.com"]
    },
    "water_detection":{
        "enable_function":0,
