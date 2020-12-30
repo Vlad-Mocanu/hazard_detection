@@ -3,16 +3,10 @@ import time
 import numpy as np
 import datetime
 
-import water_detection
-
-def logging_debug(message, logging):
-    logging.debug("[%s] %s" % (datetime.datetime.now(), message))
-
-def logging_info(message, logging):
-    logging.info("[%s] %s" % (datetime.datetime.now(), message))
+import mail_functions
 
 def get_recording_device(p, logging, config_options):
-    logging_debug("Searching for recording device", logging)
+    logging.debug("Searching for recording device")
 
     info = p.get_host_api_info_by_index(0)
     numdevices = info.get('deviceCount')
@@ -20,7 +14,7 @@ def get_recording_device(p, logging, config_options):
         device_info = p.get_device_info_by_host_api_device_index(0, i)
         if (device_info.get('maxInputChannels') > 0):
             if ("snd_rpi_i2s_card" in device_info.get('name')):
-                logging_debug("Will use device id %0d - %s" % (i, device_info.get('name')), logging)
+                logging.debug("Will use device id %0d - %s" % (i, device_info.get('name')))
                 return i
 
 def get_stream_from_recording_device(p, record_device_index, config_options):
@@ -43,7 +37,7 @@ def detect_sound_from_chunk(data, logging, config_options):
     mean = np.mean(data_int)
 
     if (mean > config_options["sound_detection"]["chunk_treshold"]):
-        logging_debug("Sound detected (mean: %d treashold: %d)" % (mean, config_options["sound_detection"]["chunk_treshold"]), logging)
+        logging.debug("Sound detected (mean: %d treashold: %d)" % (mean, config_options["sound_detection"]["chunk_treshold"]))
         return 1
     else:
         return 0
@@ -51,7 +45,7 @@ def detect_sound_from_chunk(data, logging, config_options):
 def listen_for_duration(p, record_device_index, duration, logging, config_options):
     stream = get_stream_from_recording_device(p, record_device_index, config_options)
 
-    logging_debug("Listening started (listen duration: %0d seconds)" % duration, logging)
+    logging.debug("Listening started (listen duration: %0d seconds)" % duration)
     chunks_with_sound_detected = 0
     chunks_total = 0
     start_time = round(time.time())
@@ -68,7 +62,7 @@ def listen_for_duration(p, record_device_index, duration, logging, config_option
     stream.stop_stream()
     stream.close()
 
-    logging_debug("Chunks with sound detected %0d/%0d" % (chunks_with_sound_detected, chunks_total), logging)
+    logging.debug("Chunks with sound detected %0d/%0d" % (chunks_with_sound_detected, chunks_total))
 
     if (chunks_with_sound_detected / chunks_total > config_options["sound_detection"]["minute_treshold"]):
         return 1
@@ -79,7 +73,7 @@ def listen_for_duration(p, record_device_index, duration, logging, config_option
 def listen_until_sound_on(p, record_device_index, logging, config_options):
     while True:
         if listen_for_duration(p, record_device_index, config_options["sound_detection"]["listen_duration_per_minute"], logging, config_options):
-            logging_debug("Initial sound detected", logging)
+            logging.debug("Initial sound detected")
             return
         time.sleep(60 - config_options["sound_detection"]["listen_duration_per_minute"])
 
@@ -90,12 +84,11 @@ def listen_until_sound_off(p, record_device_index, logging, config_options):
     while True:
         if listen_for_duration(p, record_device_index, 60, logging, config_options):
             consecutive_mins_with_sound = consecutive_mins_with_sound + 1
-            logging_debug("Sound is still on after: %0d minutes" % consecutive_mins_with_sound, logging)
+            logging.debug("Sound is still on after: %0d minutes" % consecutive_mins_with_sound)
         else:
             if consecutive_mins_with_sound > 0:
-                logging_info("Sound stopped after: %0d minutes" % consecutive_mins_with_sound, logging)
+                logging.info("Sound stopped after: %0d minutes" % consecutive_mins_with_sound)
             return
 
         if (consecutive_mins_with_sound >= config_options["sound_detection"]["consecutive_listen_minutes"]):
-            logging_info("Suspicious Sound detected!", logging)
-            water_detection.sendEmail("Sound detection system: Suspicious Sound detected for over %0d minutes" % consecutive_mins_with_sound, logging, config_options)
+            mail_functions.sendEmail("Suspicious Sound detected for over %0d minutes" % consecutive_mins_with_sound, logging, config_options)
